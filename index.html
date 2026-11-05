@@ -3,300 +3,324 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>股市預測</title>
+  <title>股市自動預測</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1>股市預測</h1>
-    <p>設定風險報酬比，記錄每一筆交易</p>
+  <header class="site-header">
+    <h1>股市自動預測</h1>
   </header>
 
-  <main>
-    <!-- 交易設定與記錄 -->
+  <main class="container">
     <section class="card">
       <h2>交易設定</h2>
       <form id="tradeForm" novalidate>
-        <div class="grid">
-          <div class="field full">
-            <label for="name">股市名稱</label>
-            <input id="name" type="text" placeholder="例如：2330 台積電" required>
-          </div>
+        <div class="field">
+          <label for="stockName">股市名稱</label>
+          <input type="text" id="stockName" placeholder="例:2330 台積電" required>
+        </div>
 
+        <div class="field">
+          <label for="tradeTime">交易日期時間</label>
+          <input type="datetime-local" id="tradeTime" required>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="rr">風險RR值</label>
+            <input type="number" id="rr" step="0.1" min="0.1" value="2" required>
+          </div>
+          <div class="field">
+            <label for="qty">股數</label>
+            <input type="number" id="qty" step="1" min="1" placeholder="例:1000" required>
+          </div>
+        </div>
+
+        <div class="grid">
           <div class="field">
             <label for="entry">進場價格</label>
-            <input id="entry" type="number" step="any" min="0" inputmode="decimal" required>
+            <input type="number" id="entry" step="0.01" min="0" required>
           </div>
-
           <div class="field">
-            <label for="stop">停損價格</label>
-            <input id="stop" type="number" step="any" min="0" inputmode="decimal" required>
+            <label for="stop">停損</label>
+            <input type="number" id="stop" step="0.01" min="0" required>
           </div>
-
           <div class="field">
-            <label for="rr">風險報酬比 RR（1 : ?）</label>
-            <input id="rr" type="number" step="any" min="0" value="2" inputmode="decimal" required>
+            <label for="take">停利</label>
+            <input type="number" id="take" step="0.01" min="0" required>
           </div>
-
           <div class="field">
-            <label for="shares">股數</label>
-            <input id="shares" type="number" step="any" min="0" inputmode="decimal" required>
+            <label for="exit">實際出場價格</label>
+            <input type="number" id="exit" step="0.01" min="0" required>
           </div>
         </div>
 
-        <div class="plan">
-          <div><span>方向</span><strong id="side">-</strong></div>
-          <div><span>停利價格</span><strong id="target">-</strong></div>
-          <div><span>每股風險</span><strong id="risk">-</strong></div>
+        <p class="hint" id="planHint">停利會依 RR 值、進場價與停損自動計算,也可手動修改。</p>
+
+        <div class="field">
+          <label for="analysis">虧損與交易分析</label>
+          <textarea id="analysis" rows="4" placeholder="記錄這筆交易的想法、虧損原因與檢討"></textarea>
         </div>
 
-        <h2 class="sub-title">交易記錄</h2>
-        <div class="grid">
-          <div class="field">
-            <label for="time">交易時間日期</label>
-            <input id="time" type="datetime-local" required>
-          </div>
-
-          <div class="field">
-            <label for="exit">出場價格</label>
-            <input id="exit" type="number" step="any" min="0" inputmode="decimal" required>
-          </div>
-
-          <div class="field full">
-            <label for="note">交易分析（進出場理由、虧損原因、檢討）</label>
-            <textarea id="note" placeholder="寫下這筆交易的分析..."></textarea>
-          </div>
-
-          <div class="field full">
-            <button type="submit">記錄這筆交易</button>
-          </div>
-        </div>
-        <p id="message"></p>
+        <p class="error" id="formError" role="alert"></p>
+        <button type="submit" class="btn">記錄這筆交易</button>
       </form>
     </section>
 
-    <!-- 統計 -->
     <section class="card">
-      <h2>損益統計</h2>
-      <div class="stats">
-        <div><span>交易筆數</span><strong id="statCount">0</strong></div>
-        <div><span>勝率</span><strong id="statWin">0%</strong></div>
-        <div><span>總盈虧</span><strong id="statPnl">0</strong></div>
-        <div><span>平均毛利率</span><strong id="statRate">0%</strong></div>
+      <h2>交易紀錄</h2>
+      <div class="summary">
+        <div>
+          <span class="label">總筆數</span>
+          <strong id="sumCount">0</strong>
+        </div>
+        <div>
+          <span class="label">總盈虧</span>
+          <strong id="sumPnl">0.00</strong>
+        </div>
       </div>
-    </section>
-
-    <!-- 虧損分析 -->
-    <section class="card">
-      <h2>虧損與交易分析</h2>
-      <div class="stats">
-        <div><span>虧損筆數</span><strong id="lossCount">0</strong></div>
-        <div><span>總虧損</span><strong id="lossTotal">0</strong></div>
+      <div id="tradeList" class="trade-list">
+        <p class="empty">目前沒有任何交易紀錄</p>
       </div>
-      <div id="lossList"></div>
-    </section>
-
-    <!-- 全部交易 -->
-    <section class="card">
-      <h2>所有交易記錄</h2>
-      <div id="tradeList"></div>
     </section>
   </main>
 
   <script>
-    var STORAGE_KEY = "stock-trades";
-    var trades = loadTrades();
+    (function () {
+      var STORAGE_KEY = 'stock_trades_v1';
 
-    var $ = function (id) { return document.getElementById(id); };
+      var form = document.getElementById('tradeForm');
+      var el = {
+        name: document.getElementById('stockName'),
+        time: document.getElementById('tradeTime'),
+        rr: document.getElementById('rr'),
+        qty: document.getElementById('qty'),
+        entry: document.getElementById('entry'),
+        stop: document.getElementById('stop'),
+        take: document.getElementById('take'),
+        exit: document.getElementById('exit'),
+        analysis: document.getElementById('analysis'),
+        error: document.getElementById('formError'),
+        hint: document.getElementById('planHint'),
+        list: document.getElementById('tradeList'),
+        sumCount: document.getElementById('sumCount'),
+        sumPnl: document.getElementById('sumPnl')
+      };
 
-    // 預設帶入現在時間
-    function setNow() {
-      var d = new Date();
-      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-      $("time").value = d.toISOString().slice(0, 16);
-    }
+      var takeEditedByUser = false;
+      var trades = loadTrades();
 
-    function loadTrades() {
-      try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-      } catch (e) {
-        return [];
+      function loadTrades() {
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+          return [];
+        }
       }
-    }
 
-    function saveTrades() {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(trades));
-      } catch (e) {}
-    }
+      function saveTrades() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(trades));
+        } catch (e) {
+          el.error.textContent = '無法儲存到瀏覽器,請檢查瀏覽器設定。';
+        }
+      }
 
-    function fmt(n) {
-      return (Math.round(n * 100) / 100).toLocaleString("zh-TW", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2
+      function pad(n) {
+        return n < 10 ? '0' + n : '' + n;
+      }
+
+      function nowLocalValue() {
+        var d = new Date();
+        return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+          'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+      }
+
+      function formatTime(value) {
+        if (!value) return '';
+        return value.replace('T', ' ');
+      }
+
+      function num(input) {
+        var v = parseFloat(input.value);
+        return isNaN(v) ? null : v;
+      }
+
+      function fmt(n) {
+        return n.toFixed(2);
+      }
+
+      /* 依 RR 自動計算停利(多空方向由進場價與停損關係判斷) */
+      function updateTake() {
+        var entry = num(el.entry);
+        var stop = num(el.stop);
+        var rr = num(el.rr);
+        if (entry === null || stop === null || rr === null || entry === stop) {
+          el.hint.textContent = '停利會依 RR 值、進場價與停損自動計算,也可手動修改。';
+          return;
+        }
+        var risk = entry - stop;
+        var dir = risk > 0 ? '做多' : '做空';
+        if (!takeEditedByUser) {
+          el.take.value = fmt(entry + risk * rr);
+        }
+        el.hint.textContent = '方向:' + dir + ';每股風險 ' + fmt(Math.abs(risk)) + '。';
+      }
+
+      ['entry', 'stop', 'rr'].forEach(function (k) {
+        el[k].addEventListener('input', updateTake);
       });
-    }
-
-    function sign(n) {
-      return (n > 0 ? "+" : "") + fmt(n);
-    }
-
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, function (c) {
-        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
-      });
-    }
-
-    // 計算方向、停利、每股風險
-    function calcPlan() {
-      var entry = parseFloat($("entry").value);
-      var stop = parseFloat($("stop").value);
-      var rr = parseFloat($("rr").value);
-
-      if (isNaN(entry) || isNaN(stop) || entry === stop) {
-        $("side").textContent = "-";
-        $("target").textContent = "-";
-        $("risk").textContent = "-";
-        return null;
-      }
-
-      var side = stop < entry ? 1 : -1; // 1 = 做多, -1 = 做空
-      var risk = Math.abs(entry - stop);
-      var target = isNaN(rr) ? NaN : entry + side * risk * rr;
-
-      $("side").textContent = side === 1 ? "做多" : "做空";
-      $("target").textContent = isNaN(target) ? "-" : fmt(target);
-      $("risk").textContent = fmt(risk);
-
-      return { side: side, risk: risk, target: target };
-    }
-
-    function tradeHtml(t) {
-      var cls = t.pnl >= 0 ? "up" : "down";
-      return (
-        '<div class="trade">' +
-          '<div class="trade-head">' +
-            "<strong>" + escapeHtml(t.name) + " · " + (t.side === 1 ? "做多" : "做空") + "</strong>" +
-            '<span class="trade-time">' + escapeHtml(t.time.replace("T", " ")) + "</span>" +
-          "</div>" +
-          '<div class="trade-detail">進場 ' + fmt(t.entry) + " ／ 停損 " + fmt(t.stop) +
-            " ／ 停利 " + fmt(t.target) + " ／ 出場 " + fmt(t.exit) +
-            " ／ RR 1:" + fmt(t.rr) + " ／ " + fmt(t.shares) + " 股</div>" +
-          '<div class="trade-result ' + cls + '">盈虧 ' + sign(t.pnl) +
-            "（毛利率 " + sign(t.rate) + "%）</div>" +
-          (t.note ? '<p class="trade-note">' + escapeHtml(t.note) + "</p>" : "") +
-          '<button type="button" class="delete" data-id="' + t.id + '">刪除</button>' +
-        "</div>"
-      );
-    }
-
-    function render() {
-      var count = trades.length;
-      var wins = trades.filter(function (t) { return t.pnl > 0; });
-      var losses = trades.filter(function (t) { return t.pnl < 0; });
-      var totalPnl = trades.reduce(function (s, t) { return s + t.pnl; }, 0);
-      var avgRate = count ? trades.reduce(function (s, t) { return s + t.rate; }, 0) / count : 0;
-      var lossTotal = losses.reduce(function (s, t) { return s + t.pnl; }, 0);
-
-      $("statCount").textContent = count;
-      $("statWin").textContent = count ? fmt(wins.length / count * 100) + "%" : "0%";
-      $("statPnl").textContent = sign(totalPnl);
-      $("statPnl").className = totalPnl >= 0 ? "up" : "down";
-      $("statRate").textContent = sign(avgRate) + "%";
-      $("statRate").className = avgRate >= 0 ? "up" : "down";
-
-      $("lossCount").textContent = losses.length;
-      $("lossTotal").textContent = fmt(lossTotal);
-      $("lossTotal").className = losses.length ? "down" : "";
-
-      var sorted = trades.slice().sort(function (a, b) {
-        return a.time < b.time ? 1 : -1;
-      });
-      var sortedLosses = sorted.filter(function (t) { return t.pnl < 0; });
-
-      $("lossList").innerHTML = sortedLosses.length
-        ? '<h3 class="sub-title">虧損交易檢討</h3>' + sortedLosses.map(tradeHtml).join("")
-        : "";
-
-      $("tradeList").innerHTML = sorted.length
-        ? sorted.map(tradeHtml).join("")
-        : '<p class="empty">尚無交易記錄</p>';
-    }
-
-    function showMessage(text) {
-      $("message").textContent = text;
-    }
-
-    ["entry", "stop", "rr"].forEach(function (id) {
-      $(id).addEventListener("input", calcPlan);
-    });
-
-    $("tradeForm").addEventListener("submit", function (e) {
-      e.preventDefault();
-
-      var name = $("name").value.trim();
-      var entry = parseFloat($("entry").value);
-      var stop = parseFloat($("stop").value);
-      var rr = parseFloat($("rr").value);
-      var shares = parseFloat($("shares").value);
-      var exit = parseFloat($("exit").value);
-      var time = $("time").value;
-
-      if (!name || !time || [entry, stop, rr, shares, exit].some(isNaN)) {
-        showMessage("請完整填寫所有欄位（交易分析可留空）。");
-        return;
-      }
-      if (entry <= 0 || shares <= 0 || rr <= 0 || stop <= 0 || exit <= 0) {
-        showMessage("價格、股數與 RR 必須大於 0。");
-        return;
-      }
-      if (entry === stop) {
-        showMessage("進場價格與停損價格不能相同。");
-        return;
-      }
-
-      var plan = calcPlan();
-      var pnl = plan.side * (exit - entry) * shares;
-      var rate = pnl / (entry * shares) * 100;
-
-      trades.push({
-        id: Date.now(),
-        time: time,
-        name: name,
-        side: plan.side,
-        entry: entry,
-        stop: stop,
-        rr: rr,
-        target: plan.target,
-        shares: shares,
-        exit: exit,
-        pnl: pnl,
-        rate: rate,
-        note: $("note").value.trim()
+      el.take.addEventListener('input', function () {
+        takeEditedByUser = el.take.value !== '';
       });
 
-      saveTrades();
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        el.error.textContent = '';
+
+        var name = el.name.value.trim();
+        var time = el.time.value;
+        var rr = num(el.rr);
+        var qty = num(el.qty);
+        var entry = num(el.entry);
+        var stop = num(el.stop);
+        var take = num(el.take);
+        var exit = num(el.exit);
+
+        if (!name || !time || rr === null || qty === null || entry === null ||
+            stop === null || take === null || exit === null) {
+          el.error.textContent = '請完整填寫所有欄位(分析可留空)。';
+          return;
+        }
+        if (rr <= 0 || qty <= 0 || entry <= 0 || stop <= 0 || take <= 0 || exit <= 0) {
+          el.error.textContent = '數值必須大於 0。';
+          return;
+        }
+        if (entry === stop) {
+          el.error.textContent = '進場價格與停損不能相同。';
+          return;
+        }
+
+        var isLong = entry > stop;
+        if ((isLong && take <= entry) || (!isLong && take >= entry)) {
+          el.error.textContent = '停利位置與方向不符,請檢查。';
+          return;
+        }
+
+        var direction = isLong ? 1 : -1;
+        var pnl = (exit - entry) * qty * direction;
+        var margin = pnl / (entry * qty) * 100;
+        var actualRR = (exit - entry) * direction / Math.abs(entry - stop);
+
+        trades.unshift({
+          id: Date.now(),
+          name: name,
+          time: time,
+          rr: rr,
+          qty: qty,
+          entry: entry,
+          stop: stop,
+          take: take,
+          exit: exit,
+          isLong: isLong,
+          pnl: pnl,
+          margin: margin,
+          actualRR: actualRR,
+          analysis: el.analysis.value.trim()
+        });
+        saveTrades();
+        render();
+
+        form.reset();
+        el.rr.value = '2';
+        el.time.value = nowLocalValue();
+        takeEditedByUser = false;
+        updateTake();
+      });
+
+      function makeRow(label, value, cls) {
+        var row = document.createElement('div');
+        row.className = 'row';
+        var l = document.createElement('span');
+        l.className = 'label';
+        l.textContent = label;
+        var v = document.createElement('span');
+        v.className = 'value' + (cls ? ' ' + cls : '');
+        v.textContent = value;
+        row.appendChild(l);
+        row.appendChild(v);
+        return row;
+      }
+
+      function render() {
+        el.list.innerHTML = '';
+
+        var total = 0;
+        trades.forEach(function (t) { total += t.pnl; });
+        el.sumCount.textContent = trades.length;
+        el.sumPnl.textContent = (total > 0 ? '+' : '') + fmt(total);
+        el.sumPnl.className = total > 0 ? 'win' : (total < 0 ? 'loss' : '');
+
+        if (!trades.length) {
+          var empty = document.createElement('p');
+          empty.className = 'empty';
+          empty.textContent = '目前沒有任何交易紀錄';
+          el.list.appendChild(empty);
+          return;
+        }
+
+        trades.forEach(function (t) {
+          var item = document.createElement('article');
+          item.className = 'trade ' + (t.pnl >= 0 ? 'is-win' : 'is-loss');
+
+          var head = document.createElement('div');
+          head.className = 'trade-head';
+          var title = document.createElement('h3');
+          title.textContent = t.name + '(' + (t.isLong ? '做多' : '做空') + ')';
+          var time = document.createElement('span');
+          time.className = 'time';
+          time.textContent = formatTime(t.time);
+          head.appendChild(title);
+          head.appendChild(time);
+          item.appendChild(head);
+
+          var sign = t.pnl > 0 ? '+' : '';
+          var cls = t.pnl >= 0 ? 'win' : 'loss';
+          var grid = document.createElement('div');
+          grid.className = 'trade-grid';
+          grid.appendChild(makeRow('進場價格', fmt(t.entry)));
+          grid.appendChild(makeRow('出場價格', fmt(t.exit)));
+          grid.appendChild(makeRow('停損', fmt(t.stop)));
+          grid.appendChild(makeRow('停利', fmt(t.take)));
+          grid.appendChild(makeRow('設定 RR', String(t.rr)));
+          grid.appendChild(makeRow('實際 RR', fmt(t.actualRR)));
+          grid.appendChild(makeRow('股數', String(t.qty)));
+          grid.appendChild(makeRow('盈虧', sign + fmt(t.pnl), cls));
+          grid.appendChild(makeRow('毛利率', sign + fmt(t.margin) + '%', cls));
+          item.appendChild(grid);
+
+          if (t.analysis) {
+            var note = document.createElement('div');
+            note.className = 'analysis';
+            var nt = document.createElement('span');
+            nt.className = 'label';
+            nt.textContent = '虧損與交易分析';
+            var np = document.createElement('p');
+            np.textContent = t.analysis;
+            note.appendChild(nt);
+            note.appendChild(np);
+            item.appendChild(note);
+          }
+
+          el.list.appendChild(item);
+        });
+      }
+
+      el.time.value = nowLocalValue();
+      updateTake();
       render();
-      showMessage("");
-
-      // 清除出場價格與分析，保留其他設定方便連續輸入
-      $("exit").value = "";
-      $("note").value = "";
-      setNow();
-    });
-
-    document.addEventListener("click", function (e) {
-      var btn = e.target.closest(".delete");
-      if (!btn) return;
-      var id = Number(btn.getAttribute("data-id"));
-      trades = trades.filter(function (t) { return t.id !== id; });
-      saveTrades();
-      render();
-    });
-
-    setNow();
-    calcPlan();
-    render();
+    })();
   </script>
 </body>
 </html>
